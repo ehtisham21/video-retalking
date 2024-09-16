@@ -364,14 +364,14 @@ from third_part.GPEN.gpen_face_enhancer import FaceEnhancement
 from third_part.GFPGAN.gfpgan import GFPGANer
 # expression control
 from third_part.ganimation_replicate.model.ganimation import GANimationModel
-
+import requests
 from utils import audio
 from utils.ffhq_preprocess import Croper
 from utils.alignment_stit import crop_faces, calc_alignment_coefficients, paste_image
 from utils.inference_utils import Laplacian_Pyramid_Blending_with_mask, face_detect, load_model, options, split_coeff, \
     trans_image, transform_semantic, find_crop_norm_ratio, load_face3d_net, exp_aus_dict
 import warnings
-
+import random
 warnings.filterwarnings("ignore")
 
 args = options()
@@ -389,16 +389,19 @@ def download_file_from_s3(url, local_path):
 def main(image_url, audio_url):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('[Info] Using {} for inference.'.format(device))
-    os.makedirs(os.path.join('temp', args.tmp_dir), exist_ok=True)
+    # Create necessary directories
+    temp_dir = 'temp'
+    os.makedirs(temp_dir, exist_ok=True)
+    # os.makedirs(os.path.join('temp', args.tmp_dir), exist_ok=True)
 
     # Determine the image file extension from the S3 URL
-    image_extension = image_s3_url.split('.')[-1].lower()  # Get the extension (e.g., png, jpg, jpeg)
+    image_extension = image_url.split('.')[-1].lower()  # Get the extension (e.g., png, jpg, jpeg)
 
     # Download image and wav files from S3
-    image_local_path = os.path.join(temp, f'{"username"}-{random.randrange(1, 1000)}.{image_extension}')
-    wav_local_path = os.path.join(temp, f'{"username"}-{random.randrange(1, 1000)}.wav')
-    download_file_from_s3(image_s3_url, image_local_path)
-    download_file_from_s3(wav_s3_url, wav_local_path)
+    image_local_path = os.path.join(temp_dir, f'{"username"}-{random.randrange(1, 1000)}.{image_extension}')
+    wav_local_path = os.path.join(temp_dir, f'{"username"}-{random.randrange(1, 1000)}.wav')
+    download_file_from_s3(image_url, image_local_path)
+    download_file_from_s3(audio_url, wav_local_path)
     enhancer = FaceEnhancement(base_dir='checkpoints', size=512, model='GPEN-BFR-512', use_sr=False, \
                                sr_model='rrdb_realesrnet_psnr', channel_multiplier=2, narrow=1, device=device)
     restorer = GFPGANer(model_path='checkpoints/GFPGANv1.3.pth', upscale=1, arch='clean', \
@@ -407,9 +410,13 @@ def main(image_url, audio_url):
     # base_name = args.face.split('/')[-1]
     # if os.path.isfile(image_local_path) and args.face.split('.')[1] in ['jpg', 'png', 'jpeg']:
     #     args.static = True
+
+     # Get the file extension
+    base_name, file_extension = os.path.splitext(image_local_path)
     if not os.path.isfile(image_local_path):
         raise ValueError('--face argument must be a valid path to video/image file')
-    elif image_local_path('.')[1] in ['jpg', 'png', 'jpeg']:
+    # elif image_local_path('.')[1] in ['jpg', 'png', 'jpeg']:
+    elif file_extension.lower() in ['.jpg', '.jpeg', '.png']:
         full_frames = [cv2.imread(image_local_path)]
         fps = args.fps
     else:
@@ -723,4 +730,10 @@ def datagen(frames, mels, full_frames, frames_pil, cox):
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    # Parse the arguments
+    # args = parser.parse_args()
+
+    # Call the main function with the provided arguments
+    output_file = main(args.face, args.audio)
+    print(f"Processing complete. Output file: {output_file}")

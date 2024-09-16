@@ -10,7 +10,6 @@ from tqdm import tqdm
 from itertools import cycle
 from torch.multiprocessing import Pool, Process, set_start_method
 
-
 """
 brief: face alignment with FFHQ method (https://github.com/NVlabs/ffhq-dataset)
 author: lzhbrian (https://lzhbrian.me)
@@ -80,13 +79,13 @@ class Croper:
         eye_to_mouth = mouth_avg - eye_avg
 
         # Choose oriented crop rectangle.
-        x = eye_to_eye - np.flipud(eye_to_mouth) * [-1, 1]  
-        x /= np.hypot(*x)  
-        x *= max(np.hypot(*eye_to_eye) * 2.0, np.hypot(*eye_to_mouth) * 1.8)   
+        x = eye_to_eye - np.flipud(eye_to_mouth) * [-1, 1]
+        x /= np.hypot(*x)
+        x *= max(np.hypot(*eye_to_eye) * 2.0, np.hypot(*eye_to_mouth) * 1.8)
         y = np.flipud(x) * [-1, 1]
         c = eye_avg + eye_to_mouth * 0.1
-        quad = np.stack([c - x - y, c - x + y, c + x + y, c + x - y])   
-        qsize = np.hypot(*x) * 2   
+        quad = np.stack([c - x - y, c - x + y, c + x + y, c + x - y])
+        qsize = np.hypot(*x) * 2
 
         # Shrink.
         shrink = int(np.floor(qsize / output_size * 0.5))
@@ -114,18 +113,19 @@ class Croper:
 
         # Save aligned image.
         return crop, [lx, ly, rx, ry]
-    
-    def crop(self, img_np_list, xsize=512):    # first frame for all video
+
+    def crop(self, img_np_list, xsize=512):  # first frame for all video
         idx = 0
-        while idx < len(img_np_list)//2 :   # TODO 
+        # while idx < len(img_np_list)//2 :   # TODO
+        while idx < len(img_np_list):  # TODO
             img_np = img_np_list[idx]
             lm = self.get_landmark(img_np)
-            if lm is not None:  
-                break   # can detect face
+            if lm is not None:
+                break  # can detect face
             idx += 1
         if lm is None:
             return None
-        
+
         crop, quad = self.align_face(img=Image.fromarray(img_np), lm=lm, output_size=xsize)
         clx, cly, crx, cry = crop
         lx, ly, rx, ry = quad

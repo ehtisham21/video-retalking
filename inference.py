@@ -449,6 +449,9 @@ def main(image_url, audio_url):
     # original_size = (ox2 - ox1, oy2 - oy1)
     frames_pil = [Image.fromarray(cv2.resize(frame, (256, 256))) for frame in full_frames_RGB]
 
+    # Ensure the 'temp' directory exists
+    if not os.path.exists('./temp/'):
+        os.makedirs('./temp/')
     # get the landmark according to the detected face.
     if not os.path.isfile('temp/' + base_name + '_landmarks.txt') or args.re_preprocess:
         print('[Step 1] Landmarks Extraction in Video.')

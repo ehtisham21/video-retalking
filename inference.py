@@ -456,7 +456,7 @@ def main(image_url, audio_url):
     if not os.path.isfile('temp/' + base_name + '_landmarks.txt') or args.re_preprocess:
         print('[Step 1] Landmarks Extraction in Video.')
         kp_extractor = KeypointExtractor()
-        lm = kp_extractor.extract_keypoint(frames_pil, './temp/' + base_name + '_landmarks.txt')
+        lm = kp_extractor.extract_keypoint(frames_pil, base_name + '_landmarks.txt')
     else:
         print('[Step 1] Using saved landmarks.')
         lm = np.loadtxt('temp/' + base_name + '_landmarks.txt').astype(np.float32)
@@ -489,7 +489,7 @@ def main(image_url, audio_url):
                                          pred_coeff['gamma'], pred_coeff['trans'], trans_params[None]], 1)
             video_coeffs.append(pred_coeff)
         semantic_npy = np.array(video_coeffs)[:, 0]
-        np.save('temp/' + base_name + '_coeffs.npy', semantic_npy)
+        np.save(base_name + '_coeffs.npy', semantic_npy)
     else:
         print('[Step 2] Using saved coeffs.')
         semantic_npy = np.load('temp/' + base_name + '_coeffs.npy').astype(np.float32)
@@ -545,7 +545,7 @@ def main(image_url, audio_url):
             img_stablized = np.uint8(
                 (output['fake_image'].squeeze(0).permute(1, 2, 0).cpu().clamp_(-1, 1).numpy() + 1) / 2. * 255)
             imgs.append(cv2.cvtColor(img_stablized, cv2.COLOR_RGB2BGR))
-        np.save('temp/' + base_name + '_stablized.npy', imgs)
+        np.save(base_name + '_stablized.npy', imgs)
         del D_Net
     else:
         print('[Step 3] Using saved stabilized video.')

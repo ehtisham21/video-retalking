@@ -584,7 +584,9 @@ def main(image_url, audio_url):
     gen = datagen(imgs_enhanced.copy(), mel_chunks, full_frames, None, (oy1, oy2, ox1, ox2))
 
     frame_h, frame_w = full_frames[0].shape[:-1]
-    out = cv2.VideoWriter('temp/{}/result.mp4'.format(args.tmp_dir), cv2.VideoWriter_fourcc(*'mp4v'), fps,
+    # out = cv2.VideoWriter('temp/{}/result.mp4'.format(args.tmp_dir), cv2.VideoWriter_fourcc(*'mp4v'), fps,
+    #                       (frame_w, frame_h))
+    out = cv2.VideoWriter('{}/result.mp4'.format(args.tmp_dir), cv2.VideoWriter_fourcc(*'mp4v'), fps,
                           (frame_w, frame_h))
 
     if args.up_face != 'original':
@@ -657,9 +659,13 @@ def main(image_url, audio_url):
 
     if not os.path.isdir(os.path.dirname(args.outfile)):
         os.makedirs(os.path.dirname(args.outfile), exist_ok=True)
+    # command = 'ffmpeg -loglevel error -y -i {} -i {} -strict -2 -q:v 1 {}'.format(args.audio,
+    #                                                                               'temp/{}/result.mp4'.format(
+    #                                                                                   args.tmp_dir), args.outfile)
     command = 'ffmpeg -loglevel error -y -i {} -i {} -strict -2 -q:v 1 {}'.format(args.audio,
-                                                                                  'temp/{}/result.mp4'.format(
+                                                                                  '{}/result.mp4'.format(
                                                                                       args.tmp_dir), args.outfile)
+
     subprocess.call(command, shell=platform.system() != 'Windows')
     print('outfile:', args.outfile)
 
